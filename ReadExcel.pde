@@ -1,19 +1,25 @@
+// This code allows to read XSLX files it was copied from an example
+
 SXSSFWorkbook swb=null;
 Sheet sh=null;
 InputStream inp=null;
 Workbook wb=null;
 
-String[][] importExcel(String filepath) {
+String[][] importExcel(String filepath) throws Exception {
   String[][] temp;
   try {
     inp = new FileInputStream(filepath);
   }
   catch(Exception e) {
+    e.printStackTrace();
+    throw e;
   }
   try {
     wb = WorkbookFactory.create(inp);
   }
   catch(Exception e) {
+    e.printStackTrace();
+    throw e;
   }
   Sheet sheet = wb.getSheetAt(0);
   int sizeX = sheet.getLastRowNum();
@@ -46,27 +52,4 @@ String[][] importExcel(String filepath) {
   }
   println("Excel file imported: " + filepath + " successfully!");
   return temp;
-}
-
-void exportExcel(String[][] data, String filepath) {
-  SXSSFWorkbook wwb = new SXSSFWorkbook(100);
-  Sheet sh = wwb.createSheet();
-  int sizeX = data.length;
-  int sizeY = data[0].length;
-  for (int i=0;i<sizeX;++i) {
-    Row row = sh.createRow(i);
-    for (int j=0;j<sizeY;++j) {
-      Cell cell = row.createCell(j);
-      if (cell.getCellType()==0 || cell.getCellType()==2 || cell.getCellType()==3)cell.setCellType(1);
-      cell.setCellValue(data[i][j]);
-    }
-  }
-  try {
-    FileOutputStream out = new FileOutputStream(filepath);
-    wwb.write(out);
-    println("Excel file exported: " + filepath + " sucessfully!");
-  }
-  catch (Exception e) {
-    println("Error in saving the file...sorry!");
-  }
 }

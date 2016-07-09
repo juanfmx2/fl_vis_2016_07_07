@@ -1,16 +1,33 @@
 import java.io.*;
 import java.util.*;
-import org.apache.poi.ss.usermodel.Sheet;
+import org.gicentre.utils.stat.*;    // For chart classes.
+import org.apache.poi.ss.usermodel.Sheet; // For apache excel reading libraries
+import org.gicentre.utils.move.*;
 
-DataBreach[] allData;
+DataBreachPlot plot;
+BarChart barChart;
+XYChart scatterplot;
 
 void setup() {
-  // import excel data to a 2d string:
-  selectInput("Select a file to process:", "loadExcelDataBreach");
+  size(1000,800);
+  plot = new DataBreachPlot(10,10,600,600);
+  plot.startLoading();
 }
 
 void draw() {
-  // manipulate data
+  pushMatrix();
+  try{
+    // manipulate data
+    background(25);
+    if(plot != null){
+      plot.draw();
+    }
+  }catch(Exception e){
+    e.printStackTrace();
+    println("Unexpected error drawing!");
+    System.exit(1);
+  }
+  popMatrix();
 }
 
 void keyPressed() {

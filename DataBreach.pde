@@ -31,8 +31,13 @@ class DataBreach{
     }catch(Exception e){
       e.printStackTrace();
       println("Could not parse Excel File properly!");
-      throw e;
+      System.exit(1);
     }    
+  }
+  
+  void draw(){
+    fill(204, 102, 0);
+    ellipse(0, 0, 10, 10);
   }
 
   public String toString(){
@@ -41,15 +46,28 @@ class DataBreach{
 
 }
 
-void loadExcelDataBreach(File selection) {
-  if (selection == null) {
-    println("Window was closed or the user hit cancel.");
-  } else {
-    println("User selected " + selection.getAbsolutePath());
-    String[][] data = importExcel(selection.getAbsolutePath());
-    allData = new DataBreach[data.length-3];
-    for(int i=3 ; i < data.length ;i++){
-      allData[i-3] = new DataBreach(data[i]);
+public void drawScatter(ArrayList<DataBreach> list,float x,float y, float w,float h){
+  pushMatrix();
+  float origX = x;
+  float origY = y+h;
+  for(DataBreach dbi:list){
+  }
+  popMatrix();
+}
+
+class ByYearComparator implements Comparator<DataBreach>{
+  public int compare(DataBreach o1,DataBreach o2){
+    if(o1 == null){return -1;}
+    if(o2 == null){return 1;}
+    return o1.year - o2.year;
+  }
+}
+
+void mouseMoved() {
+  if(scatterplot != null){
+    PVector vect = scatterplot.getScreenToData(new PVector(mouseX,mouseY));
+    if(vect != null){
+      println(vect.x);println(vect.y);
     }
   }
 }
