@@ -76,11 +76,6 @@ void roundedRect(int left, int top, int width, int height, int roundness)
   endShape();
 }
 
-  // Saved part of image that will be painted over by tooltip..
-  PImage clip = null;
-  int clipx;
-  int clipy;
-
 /***
 * A class to display a tooltip in a nice bubble. 
 **/
@@ -88,8 +83,8 @@ class ToolTip{
   String mText; 
   int x;
   int y; 
-  
-  boolean doClip = true;
+  int wIn;
+  int hIn; 
   
   int myWidth;
   int fontSize = 16;
@@ -107,10 +102,16 @@ class ToolTip{
   void setBackground(color c){
     tbackground = c;
   }
-      
-  ToolTip(int _x,int _y, String tttext){
+  
+  boolean isIn(){
+    return x<=mouseX && mouseX <= x+wIn && y<=mouseY && mouseY <= y+hIn;
+  }
+  
+  ToolTip(int _x,int _y, int _w, int _h, String tttext){
     x = _x;
     y = _y;
+    wIn = _w;
+    hIn = _h;
     mText = tttext;
     ttfont = createFont("Arial",20,true);
     textFont(ttfont,fontSize);    
@@ -128,17 +129,7 @@ class ToolTip{
       }
     }
     myWidth = int(maxWidth);    
-  }
-  
-  void restoreClip(){
-    imageMode(CORNER);
-    image(clip,clipx,clipy);
-  }
-  
-  void hide(){
-    restoreClip();
-  }
-  
+  }  
   
   void drawText(String mText,int x,int y,int fontSize){  
     // Print the text to screen
@@ -174,11 +165,12 @@ class ToolTip{
   }
         
   void display(){    
-    
-    if ((clip != null) && (doClip)){
-      restoreClip();
+    if(mText.indexOf("\n") != -1){
+      textAlign(LEFT,CENTER);
     }
-    
+    else{
+      textAlign(LEFT,BOTTOM);
+    }
     // x and y are mouse coordinates, so determine where tip should be relative to that...              
     int bx = int(x+5);
     int by = int(y-totalHeight);    
@@ -194,19 +186,16 @@ class ToolTip{
     
     if (rectTop <= 0){
       by = int(y+totalHeight+rectHeightMargin);
-    }  
-        
-    // Grab whatever is going to be behind our tooltip...
-    imageMode(CORNER);
-    clip = get(bx-20,by-20,myWidth+rectWidthMargin+60,totalHeight+rectHeightMargin+60);
-    clipx = bx-20;
-    clipy = by-20;    
+    }    
     
     //bx = x+10;
     //by = y - totalHeight;
 
         
-    drawBalloon(bx,by-fontSize,myWidth,totalHeight);        
+    drawBalloon(bx-2,by-fontSize-2,myWidth+4,totalHeight+4);        
     drawText(mText,bx,by,fontSize);
+    stroke(0,200,20);
+    noFill();
+    rect(x,y,wIn,hIn);
   }
 }

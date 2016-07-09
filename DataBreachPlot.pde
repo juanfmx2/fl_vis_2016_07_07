@@ -4,28 +4,30 @@ void loadExcelDataBreach(File selection) {
     println("User did not select a file.");
     System.exit(1);
   }
-  try{
-    if(plot != null){
-      plot.loading = true;
-    }
-    String[][] data = importExcel(selection.getAbsolutePath());
-    ArrayList<DataBreach> allData = new ArrayList<DataBreach>();
-    for(int i=3 ; i < data.length ;i++){
-      DataBreach nextData = new DataBreach(data[i]);
-      int pos = Collections.binarySearch(allData,nextData,new ByYearComparator());
-      if (pos < 0){
-        allData.add(-pos-1, nextData);
+  else{
+    try{
+      if(plot != null){
+        plot.loading = true;
       }
-      else{
-        allData.add(pos, nextData);
+      String[][] data = importExcel(selection.getAbsolutePath());
+      ArrayList<DataBreach> allData = new ArrayList<DataBreach>();
+      for(int i=3 ; i < data.length ;i++){
+        DataBreach nextData = new DataBreach(data[i]);
+        int pos = Collections.binarySearch(allData,nextData,new ByYearComparator());
+        if (pos < 0){
+          allData.add(-pos-1, nextData);
+        }
+        else{
+          allData.add(pos, nextData);
+        }
       }
+      if(plot != null){
+        plot.loadData(allData);
+      }
+    }catch(Exception e){
+      e.printStackTrace();
+      System.exit(1);
     }
-    if(plot != null){
-      plot.loadData(allData);
-    }
-  }catch(Exception e){
-    e.printStackTrace();
-    System.exit(1);
   }
 }
 
@@ -36,7 +38,8 @@ class DataBreachPlot{
   ArrayList<DataBreach> drawData;
   int minYear,maxYear;
   int minHist,maxHist;
-  int minSen,maxSens;
+  int minSens,maxSens;
+  int minLost,maxLost;
   TreeMap<Integer,Integer> histogram;
   int xPos,yPos,plotWidth,plotHeight;
   int rMargin,lMargin,bMargin,tMargin;
@@ -63,11 +66,28 @@ class DataBreachPlot{
   void startLoading(){ 
     selectInput("Select the file to process:", "loadExcelDataBreach");
   }
-  void loadData(ArrayList<DataBreach> allData){
-    data     = allData;
-    drawData = data;
-    loaded   = true;
+  
+  void filterData(){
+    drawData  = new ArrayList<DataBreach>();
+    for(DataBreach dbi:data){
+      if(orgSelection.contains(dbi.orgType) && leakTypeSelection.contains(dbi.methodOfLeak)){
+        drawData.add(dbi);
+      }
+    }
     recalc();
+  }
+  
+  void loadData(ArrayList<DataBreach> allData){
+    createSelections();
+    data     = allData;
+    for(String orgI:organizationTypes){
+      orgSelection.add(orgI);
+    }
+    for(String tolI:typesOfLeak){
+      leakTypeSelection.add(tolI);
+    }
+    filterData();
+    loaded   = true;
   }
   
   void calcHistogram(){
@@ -85,8 +105,10 @@ class DataBreachPlot{
     loading  = true;
     minYear = Integer.MAX_VALUE;
     maxYear = Integer.MIN_VALUE;
-    minSen = Integer.MAX_VALUE;
+    minSens = Integer.MAX_VALUE;
     maxSens = Integer.MIN_VALUE;
+    minLost = Integer.MAX_VALUE;
+    maxLost = Integer.MIN_VALUE;
     histogram.clear();
     for(DataBreach dbi:drawData){
       if(dbi.year < minYear){
@@ -95,11 +117,11 @@ class DataBreachPlot{
       if(dbi.year > maxYear){
         maxYear = dbi.year;
       }
-      if(dbi.dataSensitivity < minSen){
-        minSen = dbi.dataSensitivity;
-      }
       if(dbi.dataSensitivity > maxSens){
         maxSens = dbi.dataSensitivity;
+      }
+      if(dbi.numOfRecords > maxLost){
+        maxLost = dbi.numOfRecords;
       }
       if(!histogram.containsKey(dbi.year)){
         histogram.put(dbi.year,0);
@@ -108,21 +130,14 @@ class DataBreachPlot{
     }
     minYear--;
     maxYear++;
+    println(maxSens);
+    maxSens = round(log(float(maxSens)));
+    println(maxSens);
+    minSens = 0;
+    minLost = 0;
     calcHistogram();
     step     = 1;
     loading  = false;
-  }
-  
-  int getRightMargin(){
-    return 30;
-  }
-  
-  int getLeftMargin(){
-    return 30;
-  }
-  int getTimelineLength(){
-    
-    return plotWidth - getRightMargin();
   }
   
   void drawHistogram(){
@@ -135,7 +150,8 @@ class DataBreachPlot{
     for(int line=1;line<=4;line++){
       int linePosY = round(line*deltaLines*drawHeight/deltaVals);
       line(0, linePosY, timelineWidth, linePosY);
-      drawText(""+(line*deltaLines),-1,linePosY,yearsFSize,RIGHT,CENTER);
+      fill(255);
+      drawText(""+(line*deltaLines),0,linePosY+1,yearsFSize,LEFT,TOP);
     }
     noStroke();
     translate(-yearsGap,0);
@@ -145,8 +161,59 @@ class DataBreachPlot{
         int val = histogram.get(i);
         color histColor = color(0, 102, 153);
         fill(histColor);
-        rect(-yearsGap/2+1,0,yearsGap-2,round(val*drawHeight/deltaVals*step/100.0));
+        
+        rectWithToolTip(-yearsGap/2+1,0,yearsGap-2,round(val*drawHeight/deltaVals*step/100.0),val+" Data Breach event(s)");
       }
+    }
+    popMatrix();
+  }
+  
+  void drawSensLines(int deltaValsSens, float drawHeight){
+    stroke(200,20,20);
+    fill(200,20,20);
+    for(int level:dataSensitivityLeves.keySet()){
+      String text = dataSensitivityLeves.get(level);
+      level = round(log(float(level)));
+      if(level <= maxSens){
+        int linePosY = round(drawHeight-level*drawHeight/deltaValsSens)-10;
+        line(0, linePosY, timelineWidth, linePosY);
+        fill(255);
+        drawText(""+(text),0,linePosY+1,yearsFSize,LEFT,BOTTOM);
+      }
+    }
+  }
+  
+  void drawTopChart(){
+    pushMatrix();
+    float drawHeight      = plotHeight -tMargin-(plotHeight/2+timelineHeight/2)-1;
+    int deltaValsSens     = maxSens - minSens;
+    float maxLog = round(log(float(maxLost)));
+    float minLog = 0;
+    int deltaValsRecords     = maxLost-minLost;
+    float deltaValsRecordsLog  = maxLog-minLog;
+    translate(rMargin,tMargin);
+    stroke(255);
+    fill(255);
+    float deltaLines = deltaValsRecordsLog>4.0? deltaValsRecordsLog/4.0:1.0;
+    for(int line=1;line<=4;line++){
+      float val = line*deltaLines;
+      int linePosY = round(drawHeight-val*drawHeight/deltaValsRecordsLog);
+      line(0, linePosY, timelineWidth, linePosY);
+      drawText(""+round(exp(val)),timelineWidth,linePosY+1,yearsFSize,RIGHT,TOP);
+    }
+    //drawSensLines(deltaValsSens,drawHeight);
+    noStroke();
+    ellipseMode(RADIUS);
+    for(DataBreach dbi:drawData){
+      color histColor = color(0, 102, 153);
+      stroke(255);
+      fill(histColor);
+      int radius = 4+round(log(float(dbi.dataSensitivity)));
+      int yPos = round(drawHeight-log(float(dbi.numOfRecords))*drawHeight/deltaValsRecordsLog*step/100.0);
+      ellipse((dbi.year-minYear)*yearsGap, yPos, radius, radius);
+      noStroke();
+      noFill();
+      rectWithToolTip((dbi.year-minYear)*yearsGap-radius,yPos-radius,2*radius,2*radius,dbi.entity+" Data Breach\n"+dbi.numOfRecords+" records Lost");
     }
     popMatrix();
   }
@@ -158,6 +225,7 @@ class DataBreachPlot{
     timelineHeight = round(textAscent()+textDescent()+4);
     yearsGap = timelineWidth/(maxYear-minYear);
     drawHistogram();
+    drawTopChart();
     pushMatrix();
     translate(rMargin,plotHeight/2-timelineHeight/2);
     stroke(255);
@@ -182,15 +250,9 @@ class DataBreachPlot{
   void draw(){
     pushMatrix();
     translate(xPos,yPos);
-    stroke(0, 102, 153);
-    noFill();
-    rect(0, 0, plotWidth, plotHeight);
-    rect(0, plotHeight/2-lMargin/2, lMargin, lMargin);
-    rect(plotWidth-lMargin, plotHeight/2-lMargin/2, lMargin, lMargin);
-    rect(plotWidth/2-lMargin/2, plotHeight/2-lMargin/2, lMargin, lMargin);
     if(loaded && !loading){
       drawTimeline();
-      if(step < 100){step++;}
+      if(step < 100){step+=10;}
     }
     else if(loaded && loading){
       pushMatrix();

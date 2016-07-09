@@ -1,7 +1,7 @@
 
-Set<String> organizationTypes                  = new TreeSet<String>();
-Set<String> typesOfLeak                        = new TreeSet<String>();
-TreeMap<Integer,String> dataSensitivityLeves   = new TreeMap<Integer,String>();
+TreeSet<String> organizationTypes                  = new TreeSet<String>();
+TreeSet<String> typesOfLeak                        = new TreeSet<String>();
+TreeMap<Integer,String> dataSensitivityLeves       = new TreeMap<Integer,String>();
 {
   dataSensitivityLeves.put(1,"Just email address/Online information");
   dataSensitivityLeves.put(20,"SSN/Personal details 300 Credit card information");
@@ -20,8 +20,8 @@ class DataBreach{
       entity          = excelRow[0];
       story           = excelRow[2];
       year            = 2004+int(excelRow[3]);
-      orgType         = excelRow[5];
-      methodOfLeak    = excelRow[6];
+      orgType         = (excelRow[5]==null || excelRow[5].trim().length() == 0)? "Unknown Organization":excelRow[5].trim();
+      methodOfLeak    = (excelRow[6]==null || excelRow[6].trim().length() == 0)? "Unknown Leak Type":excelRow[6].trim();
       interesting     = boolean(excelRow[7]);
       numOfRecords    = int(excelRow[8]);
       dataSensitivity = int(excelRow[9]);
@@ -46,28 +46,10 @@ class DataBreach{
 
 }
 
-public void drawScatter(ArrayList<DataBreach> list,float x,float y, float w,float h){
-  pushMatrix();
-  float origX = x;
-  float origY = y+h;
-  for(DataBreach dbi:list){
-  }
-  popMatrix();
-}
-
 class ByYearComparator implements Comparator<DataBreach>{
   public int compare(DataBreach o1,DataBreach o2){
     if(o1 == null){return -1;}
     if(o2 == null){return 1;}
     return o1.year - o2.year;
-  }
-}
-
-void mouseMoved() {
-  if(scatterplot != null){
-    PVector vect = scatterplot.getScreenToData(new PVector(mouseX,mouseY));
-    if(vect != null){
-      println(vect.x);println(vect.y);
-    }
   }
 }

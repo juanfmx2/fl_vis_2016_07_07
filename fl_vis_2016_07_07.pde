@@ -1,26 +1,37 @@
+import g4p_controls.*;
+
 import java.io.*;
 import java.util.*;
-import org.gicentre.utils.stat.*;    // For chart classes.
-import org.apache.poi.ss.usermodel.Sheet; // For apache excel reading libraries
-import org.gicentre.utils.move.*;
+import org.apache.poi.ss.usermodel.Sheet;
 
 DataBreachPlot plot;
-BarChart barChart;
-XYChart scatterplot;
+ArrayList<ToolTip> regTooltips;
+TreeSet<String> orgSelection;
+TreeSet<String> leakTypeSelection;
 
 void setup() {
   size(1000,800);
+  regTooltips = new ArrayList<ToolTip>();
+  orgSelection      = new TreeSet<String>();
+  leakTypeSelection = new TreeSet<String>();
   plot = new DataBreachPlot(10,10,600,600);
   plot.startLoading();
 }
 
 void draw() {
+  regTooltips.clear();
   pushMatrix();
   try{
     // manipulate data
     background(25);
     if(plot != null){
       plot.draw();
+    }
+    for(ToolTip tti:regTooltips){
+      if(tti.isIn()){
+        tti.display();
+        break;
+      }
     }
   }catch(Exception e){
     e.printStackTrace();
@@ -30,7 +41,10 @@ void draw() {
   popMatrix();
 }
 
-void keyPressed() {
-  //export a 2d string to an excel file:
-  // exportExcel(a 2D string, a new filepath/name);
+void rectWithToolTip(int _x,int _y, int _w, int _h, String tttext){
+  rect( _x, _y,  _w,  _h);
+  ToolTip tt = new ToolTip(round(screenX(float(_x),float(_y))),round(screenY(float(_x),float(_y))), _w, _h, tttext);
+  if(tt.isIn()){
+    regTooltips.add(0,tt);
+  }
 }
