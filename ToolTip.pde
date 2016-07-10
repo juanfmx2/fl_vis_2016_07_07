@@ -95,7 +95,7 @@ class ToolTip{
     
   int shadowOffset = 8;
     
-  color tbackground = color(80,150,0,200);  
+  color tbackground = color(80,150,0);  
   PFont ttfont;  
 
   
@@ -128,7 +128,9 @@ class ToolTip{
         maxWidth = myWidth;
       }
     }
-    myWidth = int(maxWidth);    
+    myWidth = int(maxWidth);
+    myWidth += 8;
+    totalHeight += 8;
   }  
   
   void drawText(String mText,int x,int y,int fontSize){  
@@ -192,7 +194,7 @@ class ToolTip{
     //by = y - totalHeight;
 
         
-    drawBalloon(bx-2,by-fontSize-2,myWidth+4,totalHeight+4);        
+    drawBalloon(bx-2,by-fontSize-2,myWidth,totalHeight);        
     drawText(mText,bx,by,fontSize);
     stroke(0,200,20);
     noFill();

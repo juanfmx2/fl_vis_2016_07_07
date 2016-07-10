@@ -10,11 +10,11 @@ TreeSet<String> orgSelection;
 TreeSet<String> leakTypeSelection;
 
 void setup() {
-  size(1000,800);
+  size(1200,800);
   regTooltips = new ArrayList<ToolTip>();
   orgSelection      = new TreeSet<String>();
   leakTypeSelection = new TreeSet<String>();
-  plot = new DataBreachPlot(10,10,600,600);
+  plot = new DataBreachPlot(10,10,800,600);
   plot.startLoading();
 }
 

@@ -8,6 +8,21 @@ TreeMap<Integer,String> dataSensitivityLeves       = new TreeMap<Integer,String>
   dataSensitivityLeves.put(4000,"Email password/Health records");
   dataSensitivityLeves.put(50000,"Full bank account details");
 }
+TreeMap<String,Integer> orgColors = new TreeMap<String,Integer>();
+TreeMap<String,Integer> dltColors = new TreeMap<String,Integer>();
+
+void assignColors(){
+  orgColors.clear();
+  dltColors.clear();
+  int i = 0;
+  for(String orgI:organizationTypes){
+    orgColors.put(orgI,i++);
+  }
+  i = 0;
+  for(String tlI:typesOfLeak){
+    dltColors.put(tlI,i++);
+  }
+}
 
 class DataBreach{
   
@@ -38,6 +53,10 @@ class DataBreach{
   void draw(){
     fill(204, 102, 0);
     ellipse(0, 0, 10, 10);
+  }
+
+  public color getColor(boolean groupByOrgType){
+    return getColorPallete(groupByOrgType?orgColors.get(orgType):dltColors.get(methodOfLeak));
   }
 
   public String toString(){
